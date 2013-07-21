@@ -14,43 +14,26 @@ def checkPost(dateData):
 	if timeStamp > lastPost:
 		lastPost = timeStamp
 		return 1
-	else: return 0
+	else: 
+		return 0
 
-@willie.module.interval(60)
+@willie.module.interval(40)
 def forumScan(bot):
-	i = 8
-	x = 0
+	x = 1
 	bytes = web.get('http://hackmaine.org/forums/')[7700:]
 	if lastPost is 0:
-		while i:
-			x += bytes[x:].find('View the latest')
-			if x == -1:
-				return
-			x += 64
+		while bytes[x:].find('View the latest') != -1:
+			x += bytes[x:].find('View the latest') + 64
 			checkPost(bytes[x:x+25])
-			i-=1
 	else:
-		while i:
-			x += bytes[x:].find('View the latest')
-			if x == -1:
-				return
-			x += 64
+		while bytes[x:].find('View the latest') != -1:
+			x += bytes[x:].find('View the latest') + 64
 			if checkPost(bytes[x:x+25]):
-				if i is 1:
-					whichForum = 'Open Vehicle Tracker'
-				if i is 2:
-					whichForum = 'Electro-Mechanical'
-				if i is 3:
-					whichForum = 'Raspberry Pi'
-				if i is 4:
-					whichForum = 'Arduino'
-				if i is 5:
-					whichForum = 'Node.js'
-				if i is 6:
-					whichForum = 'Projects'
-				if i is 7:
-					whichForum = 'General Discussion'
-				if i is 8:
-					whichForum = 'Announcements and Events'
-				bot.msg('#lucidchat', 'There is a new forum post in '+whichForum)
-			i-=1
+				loc = bytes[:x].rfind('forumtitle') + 12
+				forum = bytes[loc : bytes[loc:].find('<')+loc]
+				forum = forum.replace('&amp;', '&')
+				loc += bytes[loc:].find('./viewtopic')
+				url = bytes[loc : bytes[loc:].find('>') + loc - 1]
+				url = 'http://www.hackmaine.org/forums'+url[1:]
+				url = url.replace('&amp;', '&')
+				bot.msg('#lucidchat', 'There is a new forum post in '+forum+': '+url)
